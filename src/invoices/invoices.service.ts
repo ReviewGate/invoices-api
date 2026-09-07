@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Currency, Money, money } from '../common/money';
 import { TenantMismatchError } from '../common/tenant';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -19,6 +19,8 @@ export interface CreateInvoiceCommand {
 
 @Injectable()
 export class InvoicesService {
+  private readonly logger = new Logger(InvoicesService.name);
+
   constructor(
     private readonly repository: InvoicesRepository,
     private readonly pricing: PricingService,
@@ -61,6 +63,19 @@ export class InvoicesService {
 
   totals(invoice: Invoice, command: CreateInvoiceCommand): InvoiceTotals {
     return this.pricing.totals(invoice.lines, invoice.currency, command.countryCode, command.discount);
+  }
+
+  applyCoupon(tenantId: string, id: string, code: string, command: CreateInvoiceCommand): InvoiceTotals {
+    const invoice = this.require(tenantId, id);
+    const totals = this.totals(invoice, command);
+    const coupon = this.pricing.couponDiscount(totals.net, code);
+    this.logger.log(`Coupon ${code} applied for ${command.customerEmail}, invoice ${id}`);
+    return {
+      net: totals.net,
+      discount: { amount: totals.discount.amount + coupon.amount, currency: totals.net.currency },
+      tax: totals.tax,
+      gross: { amount: totals.gross.amount - coupon.amount, currency: totals.net.currency },
+    };
   }
 
   amountDue(invoice: Invoice, command: CreateInvoiceCommand): Money {
