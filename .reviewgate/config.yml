@@ -1,0 +1,58 @@
+version: 1
+language: en
+preset: nestjs
+severity_gate: major
+tests: optional
+
+llm:
+  generators:
+    - model: claude-sonnet-5
+  judges:
+    - model: claude-opus-5
+  full_file_context: true
+  environment_context: true
+
+committable_suggestions: true
+
+cost:
+  show: true
+  currency: "$"
+  models:
+    claude-sonnet-5: { input: 3, output: 15 }
+    claude-opus-5: { input: 5, output: 25 }
+
+ignore:
+  - "dist/**"
+  - "coverage/**"
+
+# Team rules. Everything here is a decision the linter cannot check:
+# ESLint sees syntax, these are invariants of the domain.
+rules:
+  - id: money-in-minor-units
+    description: "Amounts live in integer minor units. No floating point arithmetic on money, no parseFloat on an amount, no division that silently produces fractions of a cent. Rounding goes through the shared helper so every place rounds the same way."
+    severity: critical
+  - id: tenant-scoped-reads
+    description: "Every read of a stored entity takes the caller's tenant and filters by it. A lookup by id alone is a defect even when the caller looks trusted: it is how one customer reaches another customer's invoice."
+    severity: critical
+  - id: no-customer-data-in-logs
+    description: "Logs carry identifiers and outcomes, never customer data: no e-mail addresses, no amounts, no request or response bodies of outgoing calls. An identifier is enough to find the record in the database."
+    severity: major
+  - id: payment-writes-are-idempotent
+    description: "A payment write keyed by an idempotency key must return the original payment on a repeat instead of creating a second one. The gateway retries on timeouts, so a repeat is normal traffic, not an error."
+    severity: critical
+  - id: periods-in-customer-zone
+    description: "Report boundaries are computed in the customer's time zone, not in UTC. An invoice issued late in the evening belongs to the day the customer sees, and a period that starts at UTC midnight quietly moves invoices between months."
+    severity: major
+  - id: invoice-status-transitions
+    description: "Invoice status changes only along the allowed path: draft to issued, issued to paid or void. Writing a status directly, or skipping a step, leaves the invoice in a state the rest of the system does not expect."
+    severity: major
+
+review_prompt:
+  mode: extend
+  text: |
+    This service issues invoices and takes payments, so the expensive mistakes are
+    quiet ones: an amount that is off by a cent, a report that moves an invoice into
+    the wrong month, a lookup that returns another tenant's row.
+    Pay attention to arithmetic on money, to the tenant of every read, and to what
+    happens when the same request arrives twice.
+    Style and anything the linter already reports is out of scope.
