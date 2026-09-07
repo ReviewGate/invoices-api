@@ -1,0 +1,13 @@
+# Fast review of what is staged. Blocks only on `blocker`, so a draft commit
+# stays cheap: no judge, one generator, seconds rather than minutes.
+# `|| code=$?` is required: husky runs this file with `sh -e`, and a bare
+# `case $?` after a failing command would never run at all.
+command -v reviewgate >/dev/null 2>&1 || { echo "reviewgate: not installed — commit allowed unchecked" >&2; exit 0; }
+code=0
+reviewgate review --staged --fast --fail-on blocker || code=$?
+case $code in
+  0) ;;
+  2) echo "reviewgate: blocking findings — commit stopped (bypass: git commit --no-verify)" >&2; exit 1 ;;
+  *) echo "reviewgate: the review did not run (code $code) — commit allowed unchecked" >&2 ;;
+esac
+exit 0
