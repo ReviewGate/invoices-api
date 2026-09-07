@@ -24,6 +24,9 @@ cost:
 ignore:
   - "dist/**"
   - "coverage/**"
+  - "pnpm-lock.yaml"
+  - "package-lock.json"
+  - "yarn.lock"
 
 # Team rules. Everything here is a decision the linter cannot check:
 # ESLint sees syntax, these are invariants of the domain.
