@@ -44,6 +44,7 @@ export class PricingService {
     return multiply(net, discount.percent / 100);
   }
 
+  /** Discount for a promo code; an unknown code is worth nothing. */
   couponDiscount(net: Money, code: string): Money {
     const percent = COUPONS[code];
     if (percent === undefined) {

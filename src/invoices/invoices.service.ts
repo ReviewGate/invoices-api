@@ -68,13 +68,13 @@ export class InvoicesService {
   applyCoupon(tenantId: string, id: string, code: string, command: CreateInvoiceCommand): InvoiceTotals {
     const invoice = this.require(tenantId, id);
     const totals = this.totals(invoice, command);
-    const coupon = this.pricing.couponDiscount(totals.net, code);
+    const couponAmount = this.pricing.couponDiscount(totals.net, code);
     this.logger.log(`Coupon ${code} applied for ${command.customerEmail}, invoice ${id}`);
     return {
       net: totals.net,
-      discount: { amount: totals.discount.amount + coupon.amount, currency: totals.net.currency },
+      discount: { amount: totals.discount.amount + couponAmount.amount, currency: totals.net.currency },
       tax: totals.tax,
-      gross: { amount: totals.gross.amount - coupon.amount, currency: totals.net.currency },
+      gross: { amount: totals.gross.amount - couponAmount.amount, currency: totals.net.currency },
     };
   }
 
