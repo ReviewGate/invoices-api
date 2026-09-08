@@ -14,6 +14,12 @@ llm:
 
 committable_suggestions: true
 
+# Answers in review threads: the bot replies in its own threads, and elsewhere
+# only when it is mentioned. Off by default in the product.
+reply:
+  enabled: true
+  max_replies_per_thread: 3
+
 cost:
   show: true
   currency: "$"
