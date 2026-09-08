@@ -14,6 +14,9 @@ llm:
 
 committable_suggestions: true
 
+# Show the 🔬 run diagnostics block in the summary (off by default).
+diagnostics: true
+
 # Answers in review threads: the bot replies in its own threads, and elsewhere
 # only when it is mentioned. Off by default in the product.
 reply:
