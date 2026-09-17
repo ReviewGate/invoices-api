@@ -1,11 +1,30 @@
-# Full review of the branch against main, with the judge. Blocks on `major`:
-# this is the boundary where code leaves your machine.
-command -v reviewgate >/dev/null 2>&1 || { echo "reviewgate: not installed — push allowed unchecked" >&2; exit 0; }
+# .husky/pre-push
+# free checks first — uncomment what you run:
+# npm run lint
+# npm test
+
+# hooks should run on one agreed personal config, not on each developer's own.
+# Applied only if the file exists, so a typo cannot disable the review silently:
+# CFG="$HOME/.config/reviewgate/config.hooks.yml"
+# [ -z "${REVIEWGATE_CONFIG:-}" ] && [ -f "$CFG" ] && export REVIEWGATE_CONFIG="$CFG"
+
+command -v reviewgate >/dev/null 2>&1 || {
+  echo "reviewgate: not installed — push allowed unchecked" >&2
+  exit 0
+}
+
 code=0
 reviewgate review --refs origin/main --fail-on major || code=$?
 case $code in
   0) ;;
-  2) echo "reviewgate: blocking findings — push stopped (bypass: git push --no-verify)" >&2; exit 1 ;;
-  *) echo "reviewgate: the review did not run (code $code) — push allowed unchecked" >&2 ;;
+  2)
+    echo "reviewgate: blocking findings — push stopped" \
+         "(bypass: git push --no-verify)" >&2
+    exit 1
+    ;;
+  *)
+    echo "reviewgate: the review did not run (code $code)" \
+         "— push allowed unchecked" >&2
+    ;;
 esac
 exit 0
