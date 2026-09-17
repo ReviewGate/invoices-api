@@ -9,6 +9,13 @@ export interface Discount {
   readonly reason: string;
 }
 
+/** Coupon codes the marketing team hands out at conferences. Percent off the net. */
+const COUPONS: Record<string, number> = {
+  WELCOME10: 10,
+  PARTNER: 15,
+  CONF2026: 7,
+};
+
 /** Tax rates the finance team maintains per country of the customer. */
 const TAX_RATES: Record<string, number> = {
   DE: 0.19,
@@ -35,6 +42,15 @@ export class PricingService {
       throw new Error(`Discount percent out of range: ${discount.percent}`);
     }
     return multiply(net, discount.percent / 100);
+  }
+
+  /** Discount for a promo code; an unknown code is worth nothing. */
+  couponDiscount(net: Money, code: string): Money {
+    const percent = COUPONS[code];
+    if (percent === undefined) {
+      return money(0, net.currency);
+    }
+    return { amount: (net.amount * percent) / 100, currency: net.currency };
   }
 
   taxAmount(taxable: Money, countryCode: string): Money {

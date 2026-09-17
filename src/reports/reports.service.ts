@@ -19,6 +19,15 @@ export class ReportsService {
     return { from, to };
   }
 
+  /** Quarterly cut for the finance export. */
+  quarterPeriod(year: number, quarter: number): Period {
+    const firstMonth = (quarter - 1) * 3;
+    return {
+      from: new Date(Date.UTC(year, firstMonth, 1)),
+      to: new Date(Date.UTC(year, firstMonth + 3, 1)),
+    };
+  }
+
   issuedWithin(invoices: readonly Invoice[], period: Period): Invoice[] {
     return invoices.filter((invoice) => {
       if (!invoice.issuedAt) {
